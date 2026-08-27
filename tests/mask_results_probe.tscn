@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Shader" path="res://addons/ui_material/tests/mask_results_probe.gdshader" id="1_probe"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_probe"]
+shader = ExtResource("1_probe")
+
+[node name="MaskResultsProbe" type="Node2D"]
+
+[node name="Probe" type="ColorRect" parent="."]
+offset_right = 256.0
+offset_bottom = 256.0
+material = SubResource("ShaderMaterial_probe")
+mouse_filter = 2

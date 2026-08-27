@@ -16,41 +16,55 @@ struct sectors_result
 	float raw_mask;
 };
 
-/* Alternates 0 and 1 between cell rows along Y. num_steps sets how many
- * rows tile the height.
+struct alternate_mask_result
+{
+	float rows;
+	float columns;
+};
+
+struct blind_mask_result
+{
+	float raw_mask;
+	float one_sided;
+	float symmetrical;
+};
+
+struct wedges_mask_result
+{
+	float subdivision_1;
+	float subdivision_2;
+	float subdivision_3;
+};
+
+/* Alternates 0 and 1 between cell rows and columns. num_steps sets how many
+ * cells tile each axis.
  *
- * 沿 Y 方向逐行交替输出 0 和 1。num_steps 决定纵向格子数量。 */
-float alternate_rows_mask(vec2 uv, uint num_steps) {
-	float step_count = float(num_steps);
-	return abs(mod(floor(uv * step_count).y, 2.0));
+ * 沿 Y 方向逐行交替，沿 X 方向逐列交替。num_steps 决定两个轴的格子数量。 */
+alternate_mask_result alternate_mask(vec2 uv, uint num_steps) {
+	vec2 cell = floor(uv * float(num_steps));
+
+	alternate_mask_result result;
+	result.rows = abs(mod(cell.y, 2.0));
+	result.columns = abs(mod(cell.x, 2.0));
+
+	return result;
 }
 
-float alternate_rows_mask(vec2 uv) {
-	return alternate_rows_mask(uv, uint(4));
+alternate_mask_result alternate_mask(vec2 uv) {
+	return alternate_mask(uv, uint(4));
 }
 
-/* Alternates 0 and 1 between cell columns along X. num_steps sets how
- * many columns tile the width.
+/* Blind stripes expose their raw, one-sided, and symmetrical masks together.
+ * rotation turns the stripe direction and tiling sets the stripe count.
  *
- * 沿 X 方向逐列交替输出 0 和 1。num_steps 决定横向格子数量。 */
-float alternate_columns_mask(vec2 uv, uint num_steps) {
-	float step_count = float(num_steps);
-	return abs(mod(floor(uv * step_count).x, 2.0));
-}
-
-float alternate_columns_mask(vec2 uv) {
-	return alternate_columns_mask(uv, uint(4));
-}
-
-/* Unclamped blind stripes forming a single gradient that exceeds 1,
- * ready for custom remapping such as sine-driven progress. rotation
- * turns the stripe direction and tiling sets the stripe count. Matches
- * the Raw mask unclamped output of Blind Mask.
- *
- * 输出未钳制的百叶窗条纹，呈超过 1 的单向渐变，适合再做自定义映射，例如正弦进度。
- * rotation 转动条纹方向，tiling 设定条纹数量。
- * 对应 Blind Mask 的 Raw mask unclamped 输出。 */
-float blind_mask_raw(vec2 uv, float rotation, float tiling) {
+ * 百叶窗同时返回原始、单向和对称遮罩。
+ * rotation 转动条纹方向，tiling 设定条纹数量。 */
+blind_mask_result blind_mask(
+		vec2 uv,
+		float rotation,
+		float progress,
+		float tiling,
+		float feather) {
 	vec2 offset = uv - vec2(0.5);
 	float angle = rotation * TAU;
 	float sine = sin(angle);
@@ -60,54 +74,22 @@ float blind_mask_raw(vec2 uv, float rotation, float tiling) {
 			offset.x * sine + offset.y * cosine
 	) + vec2(0.5);
 
-	return rotated_uv.x * tiling;
-}
+	float raw_mask = rotated_uv.x * tiling;
 
-float blind_mask_raw(vec2 uv) {
-	return blind_mask_raw(uv, 0.0, 2.0);
-}
-
-/* Blind stripes expanding from one side. progress opens the blinds:
- * 0 keeps them closed (white) and 1 fully open (black). Higher feather
- * values soften edges. Matches the One-sided output of Blind Mask.
- *
- * 百叶窗条纹从一侧展开。progress 控制开合：0 全闭（白），1 全开（黑）。
- * feather 越大边缘越柔。对应 Blind Mask 的 One-sided 输出。 */
-float blind_mask_one_sided(
-		vec2 uv,
-		float rotation,
-		float progress,
-		float tiling,
-		float feather) {
-	float raw = blind_mask_raw(uv, rotation, tiling);
-	return smoothstep(progress, progress + feather, fract(raw));
-}
-
-float blind_mask_one_sided(vec2 uv) {
-	return blind_mask_one_sided(uv, 0.0, 0.5, 2.0, 0.02);
-}
-
-/* Blind stripes expanding outward from the center. Parameters match
- * blind_mask_one_sided. Matches the Symmetrical output of Blind Mask.
- *
- * 百叶窗条纹从中心向两侧展开。参数与 blind_mask_one_sided 相同。
- * 对应 Blind Mask 的 Symmetrical 输出。 */
-float blind_mask_symmetrical(
-		vec2 uv,
-		float rotation,
-		float progress,
-	float tiling,
-	float feather) {
-	float raw = blind_mask_raw(uv, rotation, tiling);
-	return smoothstep(
+	blind_mask_result result;
+	result.raw_mask = raw_mask;
+	result.one_sided = smoothstep(progress, progress + feather, fract(raw_mask));
+	result.symmetrical = smoothstep(
 			progress,
 			progress + feather,
-			ping_pong(raw, 1.0, 1.0).result
+			ping_pong(raw_mask, 1.0, 1.0).result
 	);
+
+	return result;
 }
 
-float blind_mask_symmetrical(vec2 uv) {
-	return blind_mask_symmetrical(uv, 0.0, 0.5, 2.0, 0.02);
+blind_mask_result blind_mask(vec2 uv) {
+	return blind_mask(uv, 0.0, 0.5, 2.0, 0.02);
 }
 
 /* Checkered mask alternating per cell. subdivisions counts rows and
@@ -254,36 +236,30 @@ sectors_result sectors(vec2 uv) {
 	return sectors(uv, 4.0, 0.8, 0.97, 0.05, 4.0, loop_0_1(0.2), false);
 }
 
-/* Diagonal wedge masks matching MF_UI_WedgesMask. wedges_mask_1 splits
- * the plane into two triangles along the main diagonal.
+/* Diagonal wedge masks matching MF_UI_WedgesMask. The result contains two,
+ * four, and eight triangle regions.
  *
  * 对角楔形遮罩，对应 MF_UI_WedgesMask。
- * wedges_mask_1 沿主对角线把平面分成两个三角形。 */
-float wedges_mask_1(vec2 uv) {
-	return ceil(uv.y - uv.x);
-}
-
-/* Four triangles arranged in an hourglass shape, built by differencing
- * the two diagonals.
- *
- * 两条对角线相减得到沙漏状的四个三角形区域。 */
-float wedges_mask_2(vec2 uv) {
-	float diagonal_1 = wedges_mask_1(uv);
+ * 结果包含两个、四个和八个三角形区域。 */
+wedges_mask_result wedges_mask(vec2 uv) {
+	float subdivision_1 = ceil(uv.y - uv.x);
 	float diagonal_2 = ceil(uv.y - (1.0 - uv.x));
-
-	return 1.0 - max(
-			clamp(diagonal_2 - diagonal_1, 0.0, 1.0),
-			clamp(diagonal_1 - diagonal_2, 0.0, 1.0)
+	float subdivision_2 = 1.0 - max(
+			clamp(diagonal_2 - subdivision_1, 0.0, 1.0),
+			clamp(subdivision_1 - diagonal_2, 0.0, 1.0)
 	);
-}
+	float subdivision_3 = mix(
+			1.0 - subdivision_2,
+			subdivision_2,
+			checkerboard_mask(uv, vec2(1.0))
+	);
 
-/* Eight triangles built by checkerboarding wedges_mask_2 per half.
- *
- * 用棋盘格对 wedges_mask_2 分半交替，得到八个三角形区域。 */
-float wedges_mask_3(vec2 uv) {
-	float hourglass = wedges_mask_2(uv);
+	wedges_mask_result result;
+	result.subdivision_1 = subdivision_1;
+	result.subdivision_2 = subdivision_2;
+	result.subdivision_3 = subdivision_3;
 
-	return mix(1.0 - hourglass, hourglass, checkerboard_mask(uv, vec2(1.0)));
+	return result;
 }
 
 /* Square-space angular gradient built from four diagonal wedges remapped
@@ -293,9 +269,11 @@ float wedges_mask_3(vec2 uv) {
  * 方形空间的角度渐变：四块对角楔形各自重映射到四分之一区间后取最大值合并。
  * 与 SDF 方框描边组合可做方框周围的着色。对应 Square Gradient。 */
 float square_gradient(vec2 uv) {
-	float wedges_1 = wedges_mask_1(uv);
-	float wedges_2 = wedges_mask_2(uv);
-	float flipped_wedges_1 = wedges_mask_1(vec2(1.0 - uv.x, uv.y));
+	wedges_mask_result wedges = wedges_mask(uv);
+	wedges_mask_result flipped_wedges = wedges_mask(vec2(1.0 - uv.x, uv.y));
+	float wedges_1 = wedges.subdivision_1;
+	float wedges_2 = wedges.subdivision_2;
+	float flipped_wedges_1 = flipped_wedges.subdivision_1;
 	float inverted_wedges_1 = 1.0 - wedges_1;
 	float inverted_wedges_2 = 1.0 - wedges_2;
 	float inverted_flipped_wedges_1 = 1.0 - flipped_wedges_1;
