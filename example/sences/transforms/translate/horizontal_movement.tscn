@@ -1,0 +1,31 @@
+[gd_scene format=3 uid="uid://by31s20ngwlsh"]
+
+[ext_resource type="Shader" uid="uid://baf4hksa41gaa" path="res://addons/ui_material/example/sences/transforms/translate/horizontal_movement.gdshader" id="1_jo45q"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_bu0v7"]
+shader = ExtResource("1_jo45q")
+shader_parameter/movement_speed = 0.5
+shader_parameter/movement_type = 0
+
+[node name="HorizontalMovement" type="Control" unique_id=1393211669]
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=1923008367]
+material = SubResource("ShaderMaterial_bu0v7")
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.25
+anchor_top = 0.25
+anchor_right = 0.75
+anchor_bottom = 0.75
+grow_horizontal = 2
+grow_vertical = 2
+metadata/_edit_use_anchors_ = true

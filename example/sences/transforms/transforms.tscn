@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://cpkuqcokvrxrg"]
+
+[node name="Transforms" type="Control" unique_id=3360867]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="BlackGround" type="ColorRect" parent="." unique_id=402986260]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.9254902, 0.9411765, 0.9490196, 1)
