@@ -40,7 +40,7 @@ struct wedges_mask_result
  * cells tile each axis.
  *
  * 沿 Y 方向逐行交替，沿 X 方向逐列交替。num_steps 决定两个轴的格子数量。 */
-alternate_mask_result alternate_mask(vec2 uv, uint num_steps) {
+alternate_mask_result uv_alternate_mask(vec2 uv, uint num_steps) {
 	vec2 cell = floor(uv * float(num_steps));
 
 	alternate_mask_result result;
@@ -50,8 +50,8 @@ alternate_mask_result alternate_mask(vec2 uv, uint num_steps) {
 	return result;
 }
 
-alternate_mask_result alternate_mask(vec2 uv) {
-	return alternate_mask(uv, uint(4));
+alternate_mask_result uv_alternate_mask(vec2 uv) {
+	return uv_alternate_mask(uv, uint(4));
 }
 
 /* Blind stripes expose their raw, one-sided, and symmetrical masks together.
@@ -59,7 +59,7 @@ alternate_mask_result alternate_mask(vec2 uv) {
  *
  * 百叶窗同时返回原始、单向和对称遮罩。
  * rotation 转动条纹方向，tiling 设定条纹数量。 */
-blind_mask_result blind_mask(
+blind_mask_result uv_blind_mask(
 		vec2 uv,
 		float rotation,
 		float progress,
@@ -88,8 +88,8 @@ blind_mask_result blind_mask(
 	return result;
 }
 
-blind_mask_result blind_mask(vec2 uv) {
-	return blind_mask(uv, 0.0, 0.5, 2.0, 0.02);
+blind_mask_result uv_blind_mask(vec2 uv) {
+	return uv_blind_mask(uv, 0.0, 0.5, 2.0, 0.02);
 }
 
 /* Checkered mask alternating per cell. subdivisions counts rows and
@@ -99,13 +99,13 @@ blind_mask_result blind_mask(vec2 uv) {
  *
  * 逐格交替的棋盘格遮罩。subdivisions 为加倍前的行列数，此处保留 UE 图的加倍行为。
  * 适合与网格类图案搭配做逐格交替。对应 Checker Mask。 */
-float checkerboard_mask(vec2 uv, vec2 subdivisions) {
+float uv_checkerboard_mask(vec2 uv, vec2 subdivisions) {
 	vec2 cell = floor(uv * subdivisions * 2.0);
 	return mod(cell.x + cell.y, 2.0);
 }
 
-float checkerboard_mask(vec2 uv) {
-	return checkerboard_mask(uv, vec2(4.0));
+float uv_checkerboard_mask(vec2 uv) {
+	return uv_checkerboard_mask(uv, vec2(4.0));
 }
 
 /* Concentric sine rings sharpened through glow_min_max.
@@ -113,7 +113,7 @@ float checkerboard_mask(vec2 uv) {
  *
  * 同心正弦环纹经 glow_min_max 锐化。
  * keep_inside_bounds 为 true 时裁剪容器圆以外的部分。 */
-float radial_glow_mask(
+float uv_radial_glow_mask(
 		vec2 uv,
 		float subdivisions,
 		vec2 glow_min_max,
@@ -126,8 +126,8 @@ float radial_glow_mask(
 	return keep_inside_bounds ? inside : glow;
 }
 
-float radial_glow_mask(vec2 uv) {
-	return radial_glow_mask(uv, 3.0, vec2(0.51, 0.49), false);
+float uv_radial_glow_mask(vec2 uv) {
+	return uv_radial_glow_mask(uv, 3.0, vec2(0.51, 0.49), false);
 }
 
 /* Splits the plane radially into beams around the center. Returns
@@ -141,7 +141,7 @@ float radial_glow_mask(vec2 uv) {
  * 三角束向中心汇聚，线束保持恒定宽度。
  * subdivisions 设束数，segment_spacing 设间隙，feather 设柔边。
  * 与 sdf_circle 的 outline 组合可做环形分段进度条。对应 Radial Segments。 */
-radial_segments_result radial_segments(
+radial_segments_result uv_radial_segments_mask(
 		vec2 uv,
 		float segment_spacing,
 		float feather,
@@ -174,8 +174,8 @@ radial_segments_result radial_segments(
 	return result;
 }
 
-radial_segments_result radial_segments(vec2 uv) {
-	return radial_segments(uv, 0.8, 0.002, 5.0);
+radial_segments_result uv_radial_segments_mask(vec2 uv) {
+	return uv_radial_segments_mask(uv, 0.8, 0.002, 5.0);
 }
 
 /* Alternating concentric rings with an integer subdivision count.
@@ -186,7 +186,7 @@ radial_segments_result radial_segments(vec2 uv) {
  * 按整数细分数生成同心环纹。
  * glow_min_max 以 SDF 同款方式控制环的软硬，keep_inside_bounds 裁剪容器圆以外的部分。
  * 对应 Ring Mask。 */
-float ring_mask(vec2 uv, vec2 glow_minmax, int subdivisions, bool keep_inside_bounds) {
+float uv_ring_mask(vec2 uv, vec2 glow_minmax, int subdivisions, bool keep_inside_bounds) {
 	float radius = length((uv - vec2(0.5)) * 2.0);
 	float wave = abs(sin(TAU * radius * float(subdivisions)) * 0.5 + 0.5);
 
@@ -207,7 +207,7 @@ float ring_mask(vec2 uv, vec2 glow_minmax, int subdivisions, bool keep_inside_bo
  * 扇区波纹与圆形描边相乘，适合加载指示动画。
  * 返回 (扇区, 原始遮罩) 两个分量：前者含圆形描边，后者不含。
  * radius、sharpness、thickness 只作用于圆形部分。对应 Sectors。 */
-sectors_result sectors(
+sectors_result uv_sectors_mask(
 		vec2 uv,
 		float subdivisions,
 		float radius,
@@ -232,8 +232,8 @@ sectors_result sectors(
 	return result;
 }
 
-sectors_result sectors(vec2 uv) {
-	return sectors(uv, 4.0, 0.8, 0.97, 0.05, 4.0, loop_0_1(0.2), false);
+sectors_result uv_sectors_mask(vec2 uv) {
+	return uv_sectors_mask(uv, 4.0, 0.8, 0.97, 0.05, 4.0, loop_0_1(0.2), false);
 }
 
 /* Diagonal wedge masks matching MF_UI_WedgesMask. The result contains two,
@@ -241,7 +241,7 @@ sectors_result sectors(vec2 uv) {
  *
  * 对角楔形遮罩，对应 MF_UI_WedgesMask。
  * 结果包含两个、四个和八个三角形区域。 */
-wedges_mask_result wedges_mask(vec2 uv) {
+wedges_mask_result uv_wedges_mask(vec2 uv) {
 	float subdivision_1 = ceil(uv.y - uv.x);
 	float diagonal_2 = ceil(uv.y - (1.0 - uv.x));
 	float subdivision_2 = 1.0 - max(
@@ -251,7 +251,7 @@ wedges_mask_result wedges_mask(vec2 uv) {
 	float subdivision_3 = mix(
 			1.0 - subdivision_2,
 			subdivision_2,
-			checkerboard_mask(uv, vec2(1.0))
+			uv_checkerboard_mask(uv, vec2(1.0))
 	);
 
 	wedges_mask_result result;
@@ -269,8 +269,8 @@ wedges_mask_result wedges_mask(vec2 uv) {
  * 方形空间的角度渐变：四块对角楔形各自重映射到四分之一区间后取最大值合并。
  * 与 SDF 方框描边组合可做方框周围的着色。对应 Square Gradient。 */
 float square_gradient(vec2 uv) {
-	wedges_mask_result wedges = wedges_mask(uv);
-	wedges_mask_result flipped_wedges = wedges_mask(vec2(1.0 - uv.x, uv.y));
+	wedges_mask_result wedges = uv_wedges_mask(uv);
+	wedges_mask_result flipped_wedges = uv_wedges_mask(vec2(1.0 - uv.x, uv.y));
 	float wedges_1 = wedges.subdivision_1;
 	float wedges_2 = wedges.subdivision_2;
 	float flipped_wedges_1 = flipped_wedges.subdivision_1;

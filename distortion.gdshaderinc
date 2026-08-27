@@ -35,7 +35,7 @@ polar_coordinates_result polar_coordinates(vec2 value_or_uv) {
  *
  * 绕单位方形中心旋转 UV，再按旋转后的 X 值缩放，模拟透视式转动。
  * 对应 Skew 的 Skewed UVs 输出。 */
-vec2 ui_skew_uv(vec2 uv, float skew_rotation, float skew_amount) {
+vec2 uv_skew(vec2 uv, float skew_rotation, float skew_amount) {
 	vec2 center = vec2(0.5);
 	float angle = skew_rotation * TAU;
 	float sine = sin(angle);
@@ -50,25 +50,25 @@ vec2 ui_skew_uv(vec2 uv, float skew_rotation, float skew_amount) {
 	return (uv - center) * scale + center;
 }
 
-vec2 ui_skew_uv(vec2 uv) {
-	return ui_skew_uv(uv, 0.0, 0.4);
+vec2 uv_skew(vec2 uv) {
+	return uv_skew(uv, 0.0, 0.4);
 }
 
-/* Skews the UVs like ui_skew_uv, then builds a soft alpha mask from the
+/* Skews the UVs like uv_skew, then builds a soft alpha mask from the
  * shortest distance to the four transformed edges. alpha_threshold sets
  * where the mask starts and alpha_feather sets its softness. Matches
  * the Alpha mask output of Skew.
  *
- * 先按 ui_skew_uv 变形 UV，再依据到四条变形边的最短距离生成柔和的 alpha 遮罩。
+ * 先按 uv_skew 变形 UV，再依据到四条变形边的最短距离生成柔和的 alpha 遮罩。
  * alpha_threshold 控制遮罩起始位置，alpha_feather 控制柔边宽度。
  * 对应 Skew 的 Alpha mask 输出。 */
-float ui_alpha_mask(
+float uv_alpha_mask(
 		vec2 uv,
 		float skew_rotation,
 		float skew_amount,
 		float alpha_threshold,
 		float alpha_feather) {
-	vec2 skewed_uv = ui_skew_uv(uv, skew_rotation, skew_amount);
+	vec2 skewed_uv = uv_skew(uv, skew_rotation, skew_amount);
 	vec2 opposite = vec2(1.0) - skewed_uv;
 	float edge_distance = min(
 			min(skewed_uv.x, skewed_uv.y),
@@ -78,26 +78,26 @@ float ui_alpha_mask(
 	return smoothstep(alpha_threshold, alpha_threshold + alpha_feather, edge_distance);
 }
 
-float ui_alpha_mask(vec2 uv, float alpha_threshold, float alpha_feather) {
-	return ui_alpha_mask(uv, 0.0, 0.4, alpha_threshold, alpha_feather);
+float uv_alpha_mask(vec2 uv, float alpha_threshold, float alpha_feather) {
+	return uv_alpha_mask(uv, 0.0, 0.4, alpha_threshold, alpha_feather);
 }
 
-float ui_alpha_mask(vec2 uv) {
-	return ui_alpha_mask(uv, 0.0, 0.4, 0.0, 0.02);
+float uv_alpha_mask(vec2 uv) {
+	return uv_alpha_mask(uv, 0.0, 0.4, 0.0, 0.02);
 }
 
 /* Slants the coordinates horizontally and vertically by slant_amount
  * while keeping the center fixed. Matches Slant.
  *
  * 按 slant_amount 对两轴做斜切，中心保持不动。对应 Slant。 */
-vec2 slant_uv(vec2 uv, vec2 slant_amount) {
+vec2 uv_slant(vec2 uv, vec2 slant_amount) {
 	vec2 slant = vec2(uv.y * slant_amount.x, uv.x * slant_amount.y);
 
 	return uv + slant - slant_amount * 0.5;
 }
 
-vec2 slant_uv(vec2 uv) {
-	return slant_uv(uv, vec2(0.25, 0.0));
+vec2 uv_slant(vec2 uv) {
+	return uv_slant(uv, vec2(0.25, 0.0));
 }
 
 /* Applies Wave Warp and returns both the warped coordinates and the raw
@@ -105,7 +105,7 @@ vec2 slant_uv(vec2 uv) {
  *
  * 应用 Wave Warp，并同时返回变形后的坐标与原始位移。
  * 对应 Wave Warp 的 Warped UVs 与 Raw distortion 输出。 */
-wave_warp_result wave_warp(
+wave_warp_result uv_wave_warp(
 		vec2 uv,
 		float phase,
 		float motion,
@@ -127,6 +127,6 @@ wave_warp_result wave_warp(
 	return result;
 }
 
-wave_warp_result wave_warp(vec2 uv) {
-	return wave_warp(uv, 0.0, loop_0_1(0.3), 5.0, 5.0, 0.07, 0.05);
+wave_warp_result uv_wave_warp(vec2 uv) {
+	return uv_wave_warp(uv, 0.0, loop_0_1(0.3), 5.0, 5.0, 0.07, 0.05);
 }

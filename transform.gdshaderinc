@@ -6,7 +6,7 @@
  *
  * 水平翻转坐标。翻转相对输入坐标而非容器，内容原地镜像。
  * 对应 Flip 的 Mirror X 输出。 */
-vec2 mirror_uv_x(vec2 uv) {
+vec2 uv_mirror_x(vec2 uv) {
 	return vec2(1.0 - uv.x, uv.y);
 }
 
@@ -14,7 +14,7 @@ vec2 mirror_uv_x(vec2 uv) {
  * Flip.
  *
  * 垂直翻转坐标。对应 Flip 的 Mirror Y 输出。 */
-vec2 mirror_uv_y(vec2 uv) {
+vec2 uv_mirror_y(vec2 uv) {
 	return vec2(uv.x, 1.0 - uv.y);
 }
 
@@ -22,7 +22,7 @@ vec2 mirror_uv_y(vec2 uv) {
  * Flip.
  *
  * 两轴同时翻转。对应 Flip 的 Mirror X and Y 输出。 */
-vec2 mirror_uv_xy(vec2 uv) {
+vec2 uv_mirror_xy(vec2 uv) {
 	return vec2(1.0) - uv;
 }
 
@@ -35,13 +35,13 @@ vec2 mirror_uv_xy(vec2 uv) {
  * 已平移的内容仍绕自身位置缩放。
  * 接近零的值钳制到 0.001，避免除法数值失控。
  * 对应 Scale 材质函数。 */
-vec2 scale_uv(vec2 uv, vec2 scale_center, vec2 scale) {
+vec2 uv_scale(vec2 uv, vec2 scale_center, vec2 scale) {
 	vec2 safe_scale = max(scale, vec2(0.001));
 	return (uv - scale_center) / safe_scale + scale_center;
 }
 
-vec2 scale_uv(vec2 uv) {
-	return scale_uv(uv, vec2(0.5), vec2(0.5));
+vec2 uv_scale(vec2 uv) {
+	return uv_scale(uv, vec2(0.5), vec2(0.5));
 }
 
 /* Translates the coordinate space without clamping the range. The
@@ -51,25 +51,25 @@ vec2 scale_uv(vec2 uv) {
  * 平移坐标空间且不限制范围。
  * 水平方向做了反转，translate.x 为正时向右移动，与 Translate 的操作习惯一致。
  * 对应 Translate 的 UVs raw 输出。 */
-vec2 translate_uv_raw(vec2 uv, vec2 translate) {
+vec2 uv_translate_raw(vec2 uv, vec2 translate) {
 	return uv + vec2(-translate.x, translate.y);
 }
 
-vec2 translate_uv_raw(vec2 uv) {
-	return translate_uv_raw(uv, vec2(0.0));
+vec2 uv_translate_raw(vec2 uv) {
+	return uv_translate_raw(uv, vec2(0.0));
 }
 
-/* Same translation as translate_uv_raw, wrapped back into 0..1 with
+/* Same translation as uv_translate_raw, wrapped back into 0..1 with
  * fract so content tiles. Matches the UVs repeat output of Translate.
  *
- * 平移方式与 translate_uv_raw 相同，结果经 fract 包回 0 到 1，内容因此平铺。
+ * 平移方式与 uv_translate_raw 相同，结果经 fract 包回 0 到 1，内容因此平铺。
  * 对应 Translate 的 UVs repeat 输出。 */
-vec2 translate_uv_repeat(vec2 uv, vec2 translate) {
-	return fract(translate_uv_raw(uv, translate));
+vec2 uv_translate_repeat(vec2 uv, vec2 translate) {
+	return fract(uv_translate_raw(uv, translate));
 }
 
-vec2 translate_uv_repeat(vec2 uv) {
-	return translate_uv_repeat(uv, vec2(0.0));
+vec2 uv_translate_repeat(vec2 uv) {
+	return uv_translate_repeat(uv, vec2(0.0));
 }
 
 struct symmetry_result
@@ -90,7 +90,7 @@ struct symmetry_result
  * symmetry_axis 向下取整后，0 表示沿纵轴的水平镜像，1 表示沿横轴的垂直镜像。
  * flip_other_axis_too 决定另一坐标是否同时镜像。
  * 侧向遮罩描述旋转和缩放前的镜像分区。 */
-symmetry_result symmetry(
+symmetry_result uv_symmetry(
 		vec2 uv,
 		float symmetry_axis,
 		vec2 offset,
@@ -133,11 +133,11 @@ symmetry_result symmetry(
 			centered_uv.x * sine + centered_uv.y * cosine
 	) + vec2(0.5);
 
-	result.symmetric_uv = scale_uv(rotated_uv, vec2(0.5), scale);
+	result.symmetric_uv = uv_scale(rotated_uv, vec2(0.5), scale);
 
 	return result;
 }
 
-symmetry_result symmetry(vec2 uv) {
-	return symmetry(uv, 1.0, vec2(0.0), true, 0.0, vec2(1.0));
+symmetry_result uv_symmetry(vec2 uv) {
+	return uv_symmetry(uv, 1.0, vec2(0.0), true, 0.0, vec2(1.0));
 }

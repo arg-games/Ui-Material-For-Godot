@@ -30,7 +30,7 @@ pattern_result pattern(vec2 uv, vec2 tiling) {
 			vec2(1.0)
 	);
 	vec2 scale = tiling_aspect / get_aspect_ratio(uv).ratio;
-	result.scaled_pattern_uvs = scale_uv(result.pattern_uvs, vec2(0.5), scale);
+	result.scaled_pattern_uvs = uv_scale(result.pattern_uvs, vec2(0.5), scale);
 
 	return result;
 }
@@ -69,7 +69,7 @@ halftone_result halftone(
 		float time) {
 	vec2 center = vec2(0.5);
 	vec2 aspect_scale = 1.0 / get_aspect_ratio(uv).ratio;
-	vec2 scaled_uv = scale_uv(uv, center, aspect_scale);
+	vec2 scaled_uv = uv_scale(uv, center, aspect_scale);
 	vec2 panned_uv = scaled_uv + time * pan_speed;
 
 	float angle = rotation * TAU;
@@ -188,7 +188,7 @@ struct truchet_result
  * sdf 提供原始距离场供混合使用。
  * 未连接的 UE 引脚：tiling=2、line_thickness=0.1、feather=0.1、
  * draw_regions=false、use_line=false、flow_speed=0.1、flow_tiling=7、seed=1.6。
- * 区域反相与流向符号分别来自两次 MF_UI_CheckerMask 调用，此处用 checkerboard_mask 复现。
+ * 区域反相与流向符号分别来自两次 MF_UI_CheckerMask 调用，此处用 uv_checkerboard_mask 复现。
  * 线性时间引脚未连接，流动动画用 loop_0_1(time, flow_speed)。
  * 描边 SmoothStep 的 min/max 为 feather 与 -feather，写成 1-smoothstep 以保证 GLSL 合法。 */
 truchet_result truchet(
@@ -219,11 +219,11 @@ truchet_result truchet(
 			abs(sdf) - line_thickness
 	);
 
-	float checker = checkerboard_mask(uv, tiling);
+	float checker = uv_checkerboard_mask(uv, tiling);
 	float should_invert = ((random_mask >= 1.0) == (checker >= 1.0)) ? 1.0 : 0.0;
 	float region_mask = smoothstep(0.0, feather, mix(sdf, -sdf, should_invert));
 
-	float flow_checker_sign = checkerboard_mask(uv, vec2(tiling.x)) * 2.0 - 1.0;
+	float flow_checker_sign = uv_checkerboard_mask(uv, vec2(tiling.x)) * 2.0 - 1.0;
 	float flow_u = (
 			atan(rotated_cells.x, rotated_cells.y) * flow_checker_sign / PI
 			- loop_0_1(time, flow_speed)

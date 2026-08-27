@@ -34,7 +34,7 @@ aspect_ratio_result get_aspect_ratio(vec2 uv) {
  *
  * 先把 UV 移到中心，再应用基于导数的比例。
  * 长轴结果可能超出 0 到 1，这是保持形状居中的正常结果。 */
-vec2 aspect_correct_uv(vec2 uv) {
+vec2 uv_aspect_correct(vec2 uv) {
 	vec2 ratio = get_aspect_ratio(uv).ratio;
 
 	return (uv - vec2(0.5)) * ratio + vec2(0.5);

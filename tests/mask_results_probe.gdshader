@@ -4,11 +4,11 @@ render_mode unshaded;
 #include "res://addons/ui_material/ui_material.gdshaderinc"
 
 void fragment() {
-	alternate_mask_result alternate = alternate_mask(UV, uint(4));
-	alternate_mask_result default_alternate = alternate_mask(UV);
-	blind_mask_result blind = blind_mask(UV, 0.0, 0.5, 2.0, 0.02);
-	blind_mask_result default_blind = blind_mask(UV);
-	wedges_mask_result wedges = wedges_mask(UV);
+	alternate_mask_result alternate = uv_alternate_mask(UV, uint(4));
+	alternate_mask_result default_alternate = uv_alternate_mask(UV);
+	blind_mask_result blind = uv_blind_mask(UV, 0.0, 0.5, 2.0, 0.02);
+	blind_mask_result default_blind = uv_blind_mask(UV);
+	wedges_mask_result wedges = uv_wedges_mask(UV);
 	float square = square_gradient(UV);
 
 	float alternate_value = alternate.rows

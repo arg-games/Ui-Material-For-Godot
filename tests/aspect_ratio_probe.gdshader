@@ -25,7 +25,7 @@ void fragment() {
 		color = test_mode == 4 ? vec3(0.95, 0.36, 0.24) : vec3(0.24, 0.72, 0.98);
 		alpha = box.fill;
 	} else if (test_mode == 1) {
-		vec2 corrected_uv = aspect_correct_uv(UV);
+		vec2 corrected_uv = uv_aspect_correct(UV);
 		sdf_shape_result circle = sdf_circle(
 				corrected_uv,
 				0.72,
