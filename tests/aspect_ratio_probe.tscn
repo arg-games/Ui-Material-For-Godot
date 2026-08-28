@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Shader" path="res://addons/ui_material/tests/aspect_ratio_probe.gdshader" id="1_probe"]
 
@@ -26,6 +26,14 @@ shader_parameter/keep_aspect_ratio = true
 shader = ExtResource("1_probe")
 shader_parameter/test_mode = 4
 shader_parameter/keep_aspect_ratio = false
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_hexagon"]
+shader = ExtResource("1_probe")
+shader_parameter/test_mode = 5
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_truchet"]
+shader = ExtResource("1_probe")
+shader_parameter/test_mode = 6
 
 [node name="AspectRatioProbe" type="Node2D"]
 
@@ -75,4 +83,20 @@ offset_top = 400.0
 offset_right = 800.0
 offset_bottom = 500.0
 material = SubResource("ShaderMaterial_stretched")
+mouse_filter = 2
+
+[node name="Hexagon" type="ColorRect" parent="."]
+offset_left = 20.0
+offset_top = 440.0
+offset_right = 220.0
+offset_bottom = 620.0
+material = SubResource("ShaderMaterial_hexagon")
+mouse_filter = 2
+
+[node name="Truchet" type="ColorRect" parent="."]
+offset_left = 240.0
+offset_top = 440.0
+offset_right = 440.0
+offset_bottom = 620.0
+material = SubResource("ShaderMaterial_truchet")
 mouse_filter = 2

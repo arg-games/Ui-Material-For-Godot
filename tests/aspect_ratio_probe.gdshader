@@ -3,7 +3,7 @@ render_mode unshaded;
 
 #include "res://addons/ui_material/ui_material.gdshaderinc"
 
-uniform int test_mode : hint_range(0, 4, 1) = 0;
+uniform int test_mode : hint_range(0, 6, 1) = 0;
 uniform bool keep_aspect_ratio = true;
 
 void fragment() {
@@ -37,7 +37,7 @@ void fragment() {
 		color = vec3(0.98, 0.78, 0.25);
 		alpha = circle.fill;
 	} else if (test_mode == 2) {
-		pattern_result grid = pattern(UV, vec2(6.0, 3.0));
+		pattern_result grid = uv_pattern(UV, vec2(6.0, 3.0));
 		sdf_shape_result dot = sdf_circle(
 				grid.scaled_pattern_uvs,
 				0.34,
@@ -48,8 +48,8 @@ void fragment() {
 		);
 		color = vec3(0.40, 0.92, 0.62);
 		alpha = dot.fill;
-	} else {
-		halftone_result dots = halftone(
+	} else if (test_mode == 3) {
+		halftone_result dots = uv_halftone(
 				UV,
 				0.5,
 				18.0,
@@ -63,6 +63,14 @@ void fragment() {
 		);
 		color = vec3(0.90, 0.42, 0.84);
 		alpha = dots.fill;
+	} else if (test_mode == 5) {
+		hexagon_tiling_result hexagons = uv_hexagon_tiling(UV);
+		color = vec3(0.32, 0.72, 0.98);
+		alpha = hexagons.fill;
+	} else {
+		truchet_result truchet_pattern = uv_truchet(UV);
+		color = vec3(0.98, 0.44, 0.28);
+		alpha = truchet_pattern.mask;
 	}
 
 	COLOR = vec4(color, alpha);

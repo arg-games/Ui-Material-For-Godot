@@ -18,7 +18,7 @@ struct pattern_result
  * 把坐标平铺成网格。pattern_uvs 逐格重复，raw_uvs 保留未取模的平铺结果，
  * scaled_pattern_uvs 将单元格校准为正方形，图案在不同平铺数与容器比例下保持一致。
  * 宽高比从连续 UV 的 fwidth 取得。对应 Grid Tiling。 */
-pattern_result pattern(vec2 uv, vec2 tiling) {
+pattern_result uv_pattern(vec2 uv, vec2 tiling) {
 	pattern_result result;
 
 	result.raw_uvs = uv * tiling;
@@ -34,8 +34,8 @@ pattern_result pattern(vec2 uv, vec2 tiling) {
 
 	return result;
 }
-pattern_result pattern(vec2 uv) {
-	return pattern(uv, vec2(2.0));
+pattern_result uv_pattern(vec2 uv) {
+	return uv_pattern(uv, vec2(2.0));
 }
 
 struct halftone_result
@@ -56,7 +56,7 @@ struct halftone_result
  * 再做平移、旋转并按 density 平铺。
  * fill 为点阵遮罩，size_mask 为插值后的点径，pattern_uvs 为可替换形状的平铺坐标。
  * 对应 MF_UI_Halftone。描边引脚未连接，内部圆点使用随尺寸的 0.1 描边。 */
-halftone_result halftone(
+halftone_result uv_halftone(
 		vec2 uv,
 		float input_gradient,
 		float density,
@@ -96,10 +96,10 @@ halftone_result halftone(
 	return result;
 }
 
-halftone_result halftone(vec2 uv) {
+halftone_result uv_halftone(vec2 uv) {
 	float input_gradient = sdf_circle(uv, 0.5, 0.0, 1.0, 0.1, true).fill;
 
-	return halftone(
+	return uv_halftone(
 			uv,
 			input_gradient,
 			50.0,
@@ -132,7 +132,7 @@ struct hexagon_tiling_result
  * outline_border 按 hex_thickness 给空隙描边，pattern_uvs 以各单元格为中心。
  * square_rectangle = (sqrt(3), 1) 提供 30-60-90 网格偏移与 60 度边。
  * 柔边宽度沿用 UE 图常量 0.03。 */
-hexagon_tiling_result hexagon_tiling(
+hexagon_tiling_result uv_hexagon_tiling(
 		vec2 uv,
 		float tiling,
 		float hex_thickness,
@@ -165,8 +165,8 @@ hexagon_tiling_result hexagon_tiling(
 	return result;
 }
 
-hexagon_tiling_result hexagon_tiling(vec2 uv) {
-	return hexagon_tiling(uv, 4.0, 0.01, 0.46);
+hexagon_tiling_result uv_hexagon_tiling(vec2 uv) {
+	return uv_hexagon_tiling(uv, 4.0, 0.01, 0.46);
 }
 
 struct truchet_result
@@ -191,7 +191,7 @@ struct truchet_result
  * 区域反相与流向符号分别来自两次 MF_UI_CheckerMask 调用，此处用 uv_checkerboard_mask 复现。
  * 线性时间引脚未连接，流动动画用 loop_0_1(time, flow_speed)。
  * 描边 SmoothStep 的 min/max 为 feather 与 -feather，写成 1-smoothstep 以保证 GLSL 合法。 */
-truchet_result truchet(
+truchet_result uv_truchet(
 		vec2 uv,
 		vec2 tiling,
 		float line_thickness,
@@ -202,7 +202,7 @@ truchet_result truchet(
 		float flow_tiling,
 		float seed,
 		float time) {
-	pattern_result grid = pattern(uv, tiling);
+	pattern_result grid = uv_pattern(uv, tiling);
 	vec2 centered = grid.pattern_uvs - vec2(0.5);
 	float random_mask = round(random(floor(grid.raw_uvs), seed).d1);
 	vec2 flipped = vec2(centered.x, (random_mask * 2.0 - 1.0) * centered.y);
@@ -238,8 +238,8 @@ truchet_result truchet(
 	return result;
 }
 
-truchet_result truchet(vec2 uv) {
-	return truchet(
+truchet_result uv_truchet(vec2 uv) {
+	return uv_truchet(
 			uv,
 			vec2(2.0),
 			0.1,
